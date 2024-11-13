@@ -21,6 +21,7 @@ import (
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 )
 
 func (suite *BackendTestSuite) TestTraceTransaction() {
@@ -114,7 +115,9 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterBlockMultipleTxs(client, 1, []types.Tx{txBz, txBz2})
-				RegisterTraceTransactionWithPredecessors(queryClient, msgEthereumTx, []*evmtypes.MsgEthereumTx{msgEthereumTx})
+				feeMarketClient := suite.backend.queryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
+				RegisterFeeMarketParams(feeMarketClient, 1)
+				RegisterTraceTransactionWithPredecessorsAndBaseFee(queryClient, msgEthereumTx, []*evmtypes.MsgEthereumTx{msgEthereumTx}, feemarkettypes.DefaultParams().BaseFee)
 			},
 			&types.Block{Header: types.Header{Height: 1, ChainID: ChainID}, Data: types.Data{Txs: []types.Tx{txBz, txBz2}}},
 			[]*abci.ResponseDeliverTx{
@@ -154,7 +157,9 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterBlock(client, 1, txBz)
-				RegisterTraceTransaction(queryClient, msgEthereumTx)
+				feeMarketClient := suite.backend.queryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
+				RegisterFeeMarketParams(feeMarketClient, 1)
+				RegisterTraceTransactionAndBaseFee(queryClient, msgEthereumTx, feemarkettypes.DefaultParams().BaseFee)
 			},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
 			[]*abci.ResponseDeliverTx{
